@@ -14,4 +14,4 @@ COPY --from=builder /app/bin/mbs_logger .
 ENV YAML_CONFIG_FILE_PATH=config.yaml
 COPY migrations migrations
 
-CMD ["./logger"]
+CMD ["./mbs_logger"]
