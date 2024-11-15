@@ -1,0 +1,17 @@
+services:
+  mbs-logger:
+    build:
+      dockerfile: local.Dockerfile
+    container_name: mbs-logger-container
+    volumes:
+      - .:/app
+    restart: always
+    ports:
+      - "5031:5031"
+    networks:
+      - mbs
+
+networks:
+  mbs:
+    name: mbs
+    external: true
