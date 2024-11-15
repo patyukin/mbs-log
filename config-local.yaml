@@ -6,11 +6,11 @@ grpc_server:
   max_connection_age: 5
 http_server:
   port: 5032
-clickhouse_dsn: "clickhouse://localhost:8002"
-rabbitmq_url: "amqp://admin:admin@localhost:5672/"
+clickhouse_dsn: ""
+rabbitmq_url: ""
 kafka:
   brokers:
-    - "localhost:9094"
+    - ""
   consumer_group: "collector_logs_group"
   topics:
     - "dbserver_auth.public.roles"
@@ -20,9 +20,9 @@ kafka:
     - "dbserver_auth.public.telegram_users"
     - "dbserver_auth.public.users"
     - "dbserver_auth.public.users_roles"
-tracer_host: "http://localhost:14268"
+tracer_host: ""
 s3:
   endpoint: "https://s3.timeweb.cloud"
-  bucket: "29becdb3-a77eace5-8e66-467c-b87d-0b89fa7798b7"
-  access_key: "WOECQHWM8GE18T8GNO8X"
-  secret_key: "KkoNt8hYxvYHhX6Bow55GINTIno2pZ9RUzrUbUqC"
+  bucket: ""
+  access_key: ""
+  secret_key: ""
