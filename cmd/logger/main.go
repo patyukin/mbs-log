@@ -126,15 +126,6 @@ func main() {
 		}
 	}()
 
-	// GRPC server
-	go func() {
-		log.Info().Msgf("GRPC started on :%d", cfg.GRPCServer.Port)
-		if err = s.Serve(lis); err != nil {
-			log.Error().Msgf("failed to serve: %v", err)
-			errCh <- err
-		}
-	}()
-
 	// metrics + pprof server
 	go func() {
 		log.Info().Msgf("Prometheus metrics exposed on :%d/metrics", cfg.HttpServer.Port)
