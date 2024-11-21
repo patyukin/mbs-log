@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/patyukin/mbs-log/internal/model"
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -33,18 +34,21 @@ func (r *Repository) InsertIntoAuditLog(ctx context.Context, payload model.Debez
 	return nil
 }
 
-func (r *Repository) SelectLogs(ctx context.Context, in *authpb.LogReportRequest) ([]model.LogReport, error) {
-	start := in.StartTime.AsTime().Format("2006-01-02")
-	end := in.EndTime.AsTime().Format("2006-01-02")
+func (r *Repository) SelectLogs(_ context.Context, in *authpb.LogReportRequest) ([]model.LogReport, error) {
+	start := in.StartTime
+	end := in.EndTime
 
 	query := fmt.Sprintf(`
 SELECT 
-	database, schema, table, operation, event_time, data, event_date 
+	database, schema, "table", operation, event_time, data, event_date 
 FROM %s_audit_log 
 WHERE event_date BETWEEN ? AND ?
 ORDER BY event_date
 `, in.ServiceName)
-	rows, err := r.db.QueryContext(ctx, query, start, end)
+
+	log.Debug().Msgf("query: %v", query)
+
+	rows, err := r.db.Query(query, start, end)
 	if err != nil {
 		return nil, fmt.Errorf("failed r.db.QueryContext: %w", err)
 	}

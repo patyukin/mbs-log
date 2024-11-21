@@ -24,12 +24,12 @@ type Config struct {
 		Topics        []string `yaml:"topics" validate:"required"`
 	} `yaml:"kafka"`
 	TracerHost string `yaml:"tracer_host" validate:"required"`
-	S3         struct {
+	Minio      struct {
 		Endpoint  string `yaml:"endpoint" validate:"required"`
 		Bucket    string `yaml:"bucket" validate:"required"`
 		AccessKey string `yaml:"access_key" validate:"required"`
 		SecretKey string `yaml:"secret_key" validate:"required"`
-	} `yaml:"s3"`
+	} `yaml:"minio"`
 }
 
 func LoadConfig() (*Config, error) {

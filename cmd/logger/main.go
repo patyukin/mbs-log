@@ -12,9 +12,8 @@ import (
 	"github.com/patyukin/mbs-pkg/pkg/dbconn"
 	"github.com/patyukin/mbs-pkg/pkg/kafka"
 	"github.com/patyukin/mbs-pkg/pkg/migrator"
+	"github.com/patyukin/mbs-pkg/pkg/minio"
 	desc "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
-	"github.com/patyukin/mbs-pkg/pkg/rabbitmq"
-	"github.com/patyukin/mbs-pkg/pkg/s3client"
 	"github.com/patyukin/mbs-pkg/pkg/tracing"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -65,34 +64,27 @@ func main() {
 		log.Fatal().Msgf("failed to up migrations: %v", err)
 	}
 
-	rbt, err := rabbitmq.New(cfg.RabbitMQURL, rabbitmq.Exchange)
-	if err != nil {
-		log.Fatal().Msgf("failed to create rabbit producer: %v", err)
-	}
-
-	err = rbt.BindQueueToExchange(
-		rabbitmq.Exchange,
-		rabbitmq.LoggerNotifyQueue,
-		[]string{rabbitmq.LoggerReportRouteKey},
-	)
-	if err != nil {
-		log.Fatal().Msgf("failed to bind LoggerNotifyQueue to exchange with - LoggerReportRouteKey, error: %v", err)
-	}
-
 	kfk, err := kafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.ConsumerGroup, cfg.Kafka.Topics)
 	if err != nil {
 		log.Fatal().Msgf("failed to create kafka consumer, err: %v", err)
 	}
 
-	s3, err := s3client.New(ctx, cfg.S3.Bucket, cfg.S3.AccessKey, cfg.S3.SecretKey)
+	mn, err := minio.New(
+		ctx,
+		cfg.Minio.Endpoint,
+		cfg.Minio.AccessKey,
+		cfg.Minio.SecretKey,
+		cfg.Minio.Bucket,
+		false,
+	)
 	if err != nil {
-		log.Fatal().Msgf("failed to create s3 client, err: %v", err)
+		log.Fatal().Msgf("failed to create minio: %v", err)
 	}
 
 	defer kfk.Close()
 
 	registry := db.New(dbConn)
-	uc := usecase.New(registry, kfk, rbt, s3)
+	uc := usecase.New(registry, kfk, mn)
 	srv := grpc.New(uc, 5)
 
 	// grpc server

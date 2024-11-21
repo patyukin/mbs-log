@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"github.com/google/uuid"
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
-func (u *UseCase) GetLogReport(ctx context.Context, in *authpb.LogReportRequest) error {
+func (u *UseCase) GetLogReport(ctx context.Context, in *authpb.LogReportRequest) (string, error) {
 	logs, err := u.db.GetRepo().SelectLogs(ctx, in)
 	if err != nil {
-		return fmt.Errorf("failed u.db.GetRepo().SelectLogs: %w", err)
+		return "", fmt.Errorf("failed u.db.GetRepo().SelectLogs: %w", err)
 	}
 
 	var buf bytes.Buffer
@@ -21,7 +22,7 @@ func (u *UseCase) GetLogReport(ctx context.Context, in *authpb.LogReportRequest)
 
 	headers := []string{"database", "schema", "table", "operation", "event_time", "data", "event_date"}
 	if err = writer.Write(headers); err != nil {
-		return fmt.Errorf("failed to write headers to CSV: %w", err)
+		return "", fmt.Errorf("failed to write headers to CSV: %w", err)
 	}
 
 	for _, l := range logs {
@@ -36,24 +37,30 @@ func (u *UseCase) GetLogReport(ctx context.Context, in *authpb.LogReportRequest)
 		}
 
 		if err = writer.Write(record); err != nil {
-			return fmt.Errorf("failed to write record to CSV: %w", err)
+			return "", fmt.Errorf("failed to write record to CSV: %w", err)
 		}
 	}
 
 	writer.Flush()
 	if err = writer.Error(); err != nil {
-		return fmt.Errorf("failed to flush CSV writer: %w", err)
+		return "", fmt.Errorf("failed to flush CSV writer: %w", err)
 	}
 
-	fileUrl, err := u.s3.UploadLogReport(ctx, &buf)
+	now := time.Now()
+	objectName := fmt.Sprintf(
+		"%04d/%02d/%02d-%s.csv",
+		now.Year(),
+		int(now.Month()),
+		now.Day(),
+		uuid.New().String(),
+	)
+
+	fileUrl, err := u.mn.UploadCSVBuffer(context.Background(), objectName, &buf)
 	if err != nil {
-		return fmt.Errorf("failed u.s3.UploadLogReport: %w", err)
+		return "", fmt.Errorf("failed u.mn.UploadCSVBuffer: %w", err)
 	}
 
-	err = u.rabbit.PublishAuthSignUpResultMessage(ctx, []byte(fileUrl), amqp.Table{})
-	if err != nil {
-		return fmt.Errorf("failed u.rabbit.PublishAuthSignUpResultMessage: %w", err)
-	}
+	log.Debug().Msgf("fileUrl: %v", fileUrl)
 
-	return nil
+	return fileUrl, nil
 }

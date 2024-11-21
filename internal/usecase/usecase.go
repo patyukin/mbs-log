@@ -5,25 +5,22 @@ import (
 	"context"
 	"github.com/patyukin/mbs-log/internal/db"
 	"github.com/patyukin/mbs-pkg/pkg/kafka"
-	"github.com/patyukin/mbs-pkg/pkg/rabbitmq"
 )
 
-type S3Client interface {
-	UploadLogReport(ctx context.Context, buf *bytes.Buffer) (string, error)
+type MinioClient interface {
+	UploadCSVBuffer(ctx context.Context, objectName string, buf *bytes.Buffer) (string, error)
 }
 
 type UseCase struct {
-	db     *db.Registry
-	kafka  *kafka.Client
-	rabbit *rabbitmq.RabbitMQ
-	s3     S3Client
+	db    *db.Registry
+	kafka *kafka.Client
+	mn    MinioClient
 }
 
-func New(db *db.Registry, kafka *kafka.Client, rabbit *rabbitmq.RabbitMQ, s3 S3Client) *UseCase {
+func New(db *db.Registry, kafka *kafka.Client, mn MinioClient) *UseCase {
 	return &UseCase{
-		db:     db,
-		kafka:  kafka,
-		rabbit: rabbit,
-		s3:     s3,
+		db:    db,
+		kafka: kafka,
+		mn:    mn,
 	}
 }
