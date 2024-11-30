@@ -1,4 +1,4 @@
-package grpc
+package grpc_router
 
 import (
 	"context"
@@ -12,14 +12,12 @@ type UseCase interface {
 
 type Server struct {
 	authpb.UnimplementedLoggerServiceServer
-	uc        UseCase
-	semaphore chan struct{}
+	uc UseCase
 }
 
-func New(uc UseCase, cntWorkers int) *Server {
+func New(uc UseCase) *Server {
 	return &Server{
-		uc:        uc,
-		semaphore: make(chan struct{}, cntWorkers),
+		uc: uc,
 	}
 }
 
@@ -29,5 +27,5 @@ func (s *Server) GetLogReport(ctx context.Context, in *authpb.LogReportRequest) 
 		return nil, fmt.Errorf("failed uc.GetLogReport: %w", err)
 	}
 
-	return &authpb.LogReportResponse{FileUrl: fileUrl}, nil
+	return &authpb.LogReportResponse{Message: fileUrl}, nil
 }

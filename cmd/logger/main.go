@@ -6,13 +6,14 @@ import (
 	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/patyukin/mbs-log/internal/config"
 	"github.com/patyukin/mbs-log/internal/db"
-	"github.com/patyukin/mbs-log/internal/server/grpc"
-	"github.com/patyukin/mbs-log/internal/server/mux"
+	"github.com/patyukin/mbs-log/internal/grpc_router"
 	"github.com/patyukin/mbs-log/internal/usecase"
 	"github.com/patyukin/mbs-pkg/pkg/dbconn"
+	"github.com/patyukin/mbs-pkg/pkg/grpc_server"
 	"github.com/patyukin/mbs-pkg/pkg/kafka"
 	"github.com/patyukin/mbs-pkg/pkg/migrator"
 	"github.com/patyukin/mbs-pkg/pkg/minio"
+	"github.com/patyukin/mbs-pkg/pkg/mux"
 	desc "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
 	"github.com/patyukin/mbs-pkg/pkg/tracing"
 	"github.com/rs/zerolog"
@@ -49,7 +50,6 @@ func main() {
 
 	log.Info().Msg("Jaeger connected")
 
-	log.Info().Msg("Opentracing connected")
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPCServer.Port))
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)
@@ -85,16 +85,14 @@ func main() {
 
 	registry := db.New(dbConn)
 	uc := usecase.New(registry, kfk, mn)
-	srv := grpc.New(uc, 5)
+	srv := grpc_router.New(uc)
 
 	// grpc server
-	s := grpc.NewGRPCServer()
+	s := grpc_server.NewGRPCServer()
 
 	reflection.Register(s)
 	desc.RegisterLoggerServiceServer(s, srv)
 	grpcPrometheus.Register(s)
-
-	log.Printf("server listening at %v", lis.Addr())
 
 	// mux server
 	m := mux.New()
@@ -121,7 +119,7 @@ func main() {
 	// metrics + pprof server
 	go func() {
 		log.Info().Msgf("Prometheus metrics exposed on :%d/metrics", cfg.HttpServer.Port)
-		if err = m.Run(fmt.Sprintf("0.0.0.0:%d", cfg.HttpServer.Port)); err != nil {
+		if err = m.Run(cfg.HttpServer.Port); err != nil {
 			log.Error().Msgf("Failed to serve Prometheus metrics: %v", err)
 			errCh <- err
 		}
