@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/patyukin/mbs-log/internal/model"
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
-	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -45,8 +44,6 @@ FROM %s_audit_log
 WHERE event_date BETWEEN ? AND ?
 ORDER BY event_date
 `, in.ServiceName)
-
-	log.Debug().Msgf("query: %v", query)
 
 	rows, err := r.db.Query(query, start, end)
 	if err != nil {

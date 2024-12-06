@@ -6,14 +6,14 @@ import (
 	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/patyukin/mbs-log/internal/config"
 	"github.com/patyukin/mbs-log/internal/db"
-	"github.com/patyukin/mbs-log/internal/grpc_router"
+	"github.com/patyukin/mbs-log/internal/server"
 	"github.com/patyukin/mbs-log/internal/usecase"
 	"github.com/patyukin/mbs-pkg/pkg/dbconn"
 	"github.com/patyukin/mbs-pkg/pkg/grpc_server"
 	"github.com/patyukin/mbs-pkg/pkg/kafka"
 	"github.com/patyukin/mbs-pkg/pkg/migrator"
 	"github.com/patyukin/mbs-pkg/pkg/minio"
-	"github.com/patyukin/mbs-pkg/pkg/mux"
+	"github.com/patyukin/mbs-pkg/pkg/mux_server"
 	desc "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
 	"github.com/patyukin/mbs-pkg/pkg/tracing"
 	"github.com/rs/zerolog"
@@ -85,7 +85,7 @@ func main() {
 
 	registry := db.New(dbConn)
 	uc := usecase.New(registry, kfk, mn)
-	srv := grpc_router.New(uc)
+	srv := server.New(uc)
 
 	// grpc server
 	s := grpc_server.NewGRPCServer()
@@ -95,7 +95,7 @@ func main() {
 	grpcPrometheus.Register(s)
 
 	// mux server
-	m := mux.New()
+	muxServer := mux_server.New()
 
 	errCh := make(chan error)
 
@@ -118,8 +118,7 @@ func main() {
 
 	// metrics + pprof server
 	go func() {
-		log.Info().Msgf("Prometheus metrics exposed on :%d/metrics", cfg.HttpServer.Port)
-		if err = m.Run(cfg.HttpServer.Port); err != nil {
+		if err = muxServer.Run(cfg.HttpServer.Port); err != nil {
 			log.Error().Msgf("Failed to serve Prometheus metrics: %v", err)
 			errCh <- err
 		}
@@ -145,7 +144,7 @@ func main() {
 	s.GracefulStop()
 
 	// stop pprof server
-	if err = m.Shutdown(ctx); err != nil {
+	if err = muxServer.Shutdown(ctx); err != nil {
 		log.Error().Msgf("failed to shutdown pprof server: %s", err.Error())
 	}
 
