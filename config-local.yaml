@@ -1,0 +1,28 @@
+min_log_level: "debug"
+grpc_server:
+  port: 5031
+  max_connection_idle: 5
+  timeout: 15
+  max_connection_age: 5
+http_server:
+  port: 5032
+clickhouse_dsn: ""
+rabbitmq_url: ""
+kafka:
+  brokers:
+    - ""
+  consumer_group: "collector_logs_group"
+  topics:
+    - "dbserver_auth.public.roles"
+    - "dbserver_auth.public.permissions"
+    - "dbserver_auth.public.roles_permissions"
+    - "dbserver_auth.public.profiles"
+    - "dbserver_auth.public.telegram_users"
+    - "dbserver_auth.public.users"
+    - "dbserver_auth.public.users_roles"
+tracer_host: ""
+s3:
+  endpoint: "https://s3.timeweb.cloud"
+  bucket: ""
+  access_key: ""
+  secret_key: ""
