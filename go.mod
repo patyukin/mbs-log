@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/patyukin/mbs-pkg v1.1.167
+	github.com/patyukin/mbs-pkg v1.1.170
 	github.com/rs/zerolog v1.33.0
 	github.com/twmb/franz-go v1.18.0
 	google.golang.org/grpc v1.68.0
