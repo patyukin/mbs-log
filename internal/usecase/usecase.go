@@ -3,6 +3,7 @@ package usecase
 import (
 	"bytes"
 	"context"
+
 	"github.com/patyukin/mbs-log/internal/db"
 	"github.com/patyukin/mbs-pkg/pkg/kafka"
 )

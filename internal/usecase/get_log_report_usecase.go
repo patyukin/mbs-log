@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
 	"github.com/rs/zerolog/log"
-	"time"
 )
 
 func (u *UseCase) GetLogReport(ctx context.Context, in *authpb.LogReportRequest) (string, error) {
