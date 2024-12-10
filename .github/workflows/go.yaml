@@ -60,4 +60,4 @@ jobs:
             cd ~/mbs-logger
             
             # deploy
-            ./deploy.sh $TAG_NAME
+            ../deploy.sh $TAG_NAME
