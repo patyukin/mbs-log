@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
 )
 

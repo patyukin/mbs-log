@@ -3,17 +3,22 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/patyukin/mbs-log/internal/model"
 	authpb "github.com/patyukin/mbs-pkg/pkg/proto/logger_v1"
-	"time"
 )
 
 type Repository struct {
 	db QueryExecutor
 }
 
-func (r *Repository) InsertIntoAuditLog(ctx context.Context, payload model.DebeziumPayload, operation string, eventTime time.Time, eventDate string, jsonData []byte) error {
-	query := fmt.Sprintf("INSERT INTO %s_audit_log (database, schema, table, operation, event_time, data, event_date) VALUES (?, ?, ?, ?, ?, ?, ?)", payload.Source.Db)
+func (r *Repository) InsertIntoAuditLog(
+	ctx context.Context, payload model.DebeziumPayload, operation string, eventTime time.Time, eventDate string, jsonData []byte,
+) error {
+	query := fmt.Sprintf(
+		"INSERT INTO %s_audit_log (database, schema, table, operation, event_time, data, event_date) VALUES (?, ?, ?, ?, ?, ?, ?)", payload.Source.Db,
+	)
 
 	_, err := r.db.ExecContext(
 		ctx,
@@ -37,13 +42,15 @@ func (r *Repository) SelectLogs(_ context.Context, in *authpb.LogReportRequest) 
 	start := in.StartTime
 	end := in.EndTime
 
-	query := fmt.Sprintf(`
+	query := fmt.Sprintf(
+		`
 SELECT 
 	database, schema, "table", operation, event_time, data, event_date 
 FROM %s_audit_log 
 WHERE event_date BETWEEN ? AND ?
 ORDER BY event_date
-`, in.ServiceName)
+`, in.ServiceName,
+	)
 
 	rows, err := r.db.Query(query, start, end)
 	if err != nil {

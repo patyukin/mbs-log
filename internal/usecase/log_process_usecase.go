@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/patyukin/mbs-log/internal/model"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kgo"
-	"time"
 )
 
 func (u *UseCase) LogProcess(ctx context.Context, record *kgo.Record) error {

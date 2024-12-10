@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	configLoader "github.com/patyukin/mbs-pkg/pkg/config"
 )
 
